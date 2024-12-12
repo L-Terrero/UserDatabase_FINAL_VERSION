@@ -3,10 +3,12 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 using namespace std;
 
-const string FILE_PATH = "C:\\Users\\luist\\CLionProjects\\USERDB\\grupos_users.txt";
+const string FILE_PATH_USERS = "C:\\Users\\luist\\CLionProjects\\USERDB\\grupos_users.txt";
+const string FILE_PATH_LOGIN = "C:\\Users\\luist\\CLionProjects\\USERDB\\login.txt";
 
 class Usuario {
 public:
@@ -30,17 +32,25 @@ void displayUser(const Usuario& user) {
     cout << "Edad: " << user.edad << endl;
 }
 
-
-#include <fstream>
-#include <sstream>
+string trim(const string& str) {
+    size_t first = str.find_first_not_of(" \t");
+    size_t last = str.find_last_not_of(" \t");
+    return (first == string::npos || last == string::npos) ? "" : str.substr(first, last - first + 1);
+}
 
 bool login() {
     string UsuarioLogin, Clave;
     bool loginSuccessful = false;
-    cout << "Ingrese su usuario: "; cin >> UsuarioLogin;
-    cout << "Ingrese su clave: "; cin >> Clave;
 
-    ifstream inputFile("login.txt");
+    cout << "Ingrese su usuario: ";
+    cin >> UsuarioLogin;
+    cout << "Ingrese su clave: ";
+    cin >> Clave;
+
+    UsuarioLogin = trim(UsuarioLogin);
+    Clave = trim(Clave);
+
+    ifstream inputFile(FILE_PATH_LOGIN);
 
     if (!inputFile.is_open()) {
         cerr << "Error: No se pudo abrir el archivo de login." << endl;
@@ -52,7 +62,14 @@ bool login() {
         stringstream ss(line);
         string fileUsername, filePassword;
 
-        ss >> fileUsername >> filePassword;
+        getline(ss, fileUsername, ',');
+        getline(ss, filePassword, ',');
+
+        fileUsername = trim(fileUsername);
+        filePassword = trim(filePassword);
+
+        transform(UsuarioLogin.begin(), UsuarioLogin.end(), UsuarioLogin.begin(), ::tolower);
+        transform(fileUsername.begin(), fileUsername.end(), fileUsername.begin(), ::tolower);
 
         if (UsuarioLogin == fileUsername && Clave == filePassword) {
             loginSuccessful = true;
@@ -69,11 +86,9 @@ bool login() {
     return loginSuccessful;
 }
 
-
-
 vector<string> ExtraerDatos() {
     vector<string> lines;
-    ifstream inputFile(FILE_PATH);
+    ifstream inputFile(FILE_PATH_USERS);
 
     if (!inputFile.is_open()) {
         cerr << "Error: No se pudo abrir el archivo de grupos." << endl;
@@ -90,7 +105,7 @@ vector<string> ExtraerDatos() {
 }
 
 void GuardarDatos(const vector<string>& lines) {
-    ofstream outputFile(FILE_PATH);
+    ofstream outputFile(FILE_PATH_USERS);
 
     if (!outputFile.is_open()) {
         cerr << "Error: No se pudo abrir el archivo para guardar." << endl;
@@ -112,7 +127,6 @@ Usuario ExtraerDatosDeUsuario(const string& line) {
     ss >> idGrupo >> nombreGrupo >> idUsuario >> nombreUsuario >> nombreLegal >> edad;
     return Usuario(idUsuario, nombreUsuario, nombreLegal, edad);
 }
-
 
 void case1() {
     int grupoID, BusqID;
@@ -200,7 +214,6 @@ void case2() {
     }
 }
 
-
 void case3() {
     int grupoID;
     cout << "Elija el grupo por ID para ver todos los usuarios: ";
@@ -210,7 +223,6 @@ void case3() {
     bool grupoEncontrado = false;
 
     for (const auto& line : lines) {
-        cout << "Leyendo línea: " << line << endl;
         stringstream ss(line);
         int idGrupo, idUsuario, edad;
         string nombreGrupo, nombreUsuario, nombreLegal;
@@ -229,7 +241,6 @@ void case3() {
     }
 }
 
-
 bool SwitchReset() {
     char choice;
     cout << "\nDesea volver al menu principal? (Y/N): ";
@@ -239,7 +250,6 @@ bool SwitchReset() {
 
 int main() {
     bool loggedIn = false;
-
 
     while (!loggedIn) {
         loggedIn = login();
@@ -251,7 +261,6 @@ int main() {
     int opcion;
     bool opc = false;
     int IterationCounter = 0;
-
 
     do {
         cout << "\nElija una opcion:" << endl;
